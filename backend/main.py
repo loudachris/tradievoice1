@@ -29,7 +29,7 @@ app.add_middleware(
 # Note: User request placeholder "[Paste the JSON Schema from Section 5 of the Spec]"
 # I am implementing a robust default schema based on the domain.
 class LineItem(BaseModel):
-    description: string
+    description: str
     quantity: float
     unit_price: float
     total: float
