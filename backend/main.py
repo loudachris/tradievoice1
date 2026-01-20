@@ -78,8 +78,27 @@ async def transcribe_audio(file: UploadFile = File(...)):
         system_prompt = """
         You are an AI assistant for a Tradie App. 
         Extract quote details from the transcription.
-        Strictly follow this JSON schema.
-        If the total value (sum of items) is greater than $10,000, set 'upsell_opportunity' to true.
+        
+        Strictly output a SINGLE flattened JSON object matching this schema (do not nest under 'quote_details'):
+        {
+            "customer_name": "string (infer or use 'Valued Customer')",
+            "items": [
+                {
+                    "description": "string", 
+                    "quantity": number, 
+                    "unit_price": number (infer if missing), 
+                    "total": number (quantity * unit_price)
+                }
+            ],
+            "total_amount": number (sum of item totals),
+            "notes": "string (summary of work)",
+            "upsell_opportunity": boolean
+        }
+
+        Rules:
+        1. If price is missing, estimate a reasonable trade price.
+        2. Calculate totals accurately.
+        3. If the total value > $10,000, set 'upsell_opportunity' to true.
         """
         
         completion = client.chat.completions.create(
