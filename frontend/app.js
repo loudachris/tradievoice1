@@ -53,6 +53,8 @@ function updateUI() {
     checkUpsellTrigger();
 }
 
+const BACKEND_URL = "https://tradie-voice-loudachris-2gra2.ondigitalocean.app";
+
 // --- Interaction Handlers ---
 
 // Toggle Mode
@@ -61,48 +63,103 @@ toggleSwitch.addEventListener('change', (e) => {
     statusText.textContent = state.mode === 'command' ? 'Ready (Command)' : 'Ready (Walkthrough)';
     console.log(`Switched to ${state.mode} mode`);
 
-    // Visual feedback for mode switch
     if (state.mode === 'walkthrough') {
-        pulseBtn.style.backgroundColor = 'var(--secondary-color)'; // Change color slightly for mode? Or keep consistent?
-        // Let's keep consistent Brand Pulse Button as per verify, but maybe change icon or shadow.
-        // For now sticking to Brand Primary as requested.
+        pulseBtn.style.backgroundColor = 'var(--secondary-color)';
     } else {
         pulseBtn.style.backgroundColor = 'var(--primary-color)';
     }
 });
 
-// Pulse Button (Recording Logic Stub)
+// Pulse Button (Recording Logic)
+let mediaRecorder;
+let audioChunks = [];
+
 pulseBtn.addEventListener('mousedown', startRecording);
 pulseBtn.addEventListener('mouseup', stopRecording);
-pulseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); }); // Mobile support
+pulseBtn.addEventListener('touchstart', (e) => { e.preventDefault(); startRecording(); });
 pulseBtn.addEventListener('touchend', (e) => { e.preventDefault(); stopRecording(); });
 
-function startRecording() {
+async function startRecording() {
     if (state.isRecording) return;
-    state.isRecording = true;
-    pulseBtn.style.transform = 'scale(0.9)';
-    statusText.textContent = 'Listening...';
-    // Logic: Connect to WebSocket or MediaRecorder based on state.mode
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+            audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            const audioBlob = new Blob(audioChunks, { type: 'audio/webm' }); // Chrome/Android default
+            await sendAudioToBackend(audioBlob);
+        };
+
+        mediaRecorder.start();
+        state.isRecording = true;
+        pulseBtn.style.transform = 'scale(0.9)';
+        statusText.textContent = 'Listening...';
+
+    } catch (err) {
+        console.error("Error accessing microphone:", err);
+        statusText.textContent = "Mic Error";
+        alert("Could not access microphone. Please ensure permission is granted.");
+    }
 }
 
 function stopRecording() {
-    if (!state.isRecording) return;
+    if (!state.isRecording || !mediaRecorder) return;
+
+    mediaRecorder.stop();
+    // Stop all tracks to release mic
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+
     state.isRecording = false;
     pulseBtn.style.transform = 'scale(1)';
     statusText.textContent = 'Processing...';
+}
 
-    // START SIMULATION FOR DEMO
-    setTimeout(() => {
-        statusText.textContent = state.mode === 'command' ? 'Ready (Command)' : 'Ready (Walkthrough)';
+async function sendAudioToBackend(audioBlob) {
+    const formData = new FormData();
+    // Using .webm extension; backend Whisper should handle it.
+    formData.append("file", audioBlob, "recording.webm");
 
-        // Simulate adding an item
-        const newItem = {
-            description: "Simulated Item " + (state.quoteItems.length + 1),
-            total: Math.floor(Math.random() * 500) + 100
-        };
-        addQuoteItem(newItem);
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/transcribe`, {
+            method: "POST",
+            body: formData
+        });
 
-    }, 1000);
+        if (!response.ok) {
+            throw new Error(`Server Error: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log("Backend Response:", data);
+
+        // Handle result
+        // The backend returns a QuoteData object
+        // For this MVP, we'll append the items to our list
+
+        if (data.items && data.items.length > 0) {
+            data.items.forEach(item => {
+                addQuoteItem(item);
+            });
+            statusText.textContent = "Success!";
+            setTimeout(() => {
+                statusText.textContent = state.mode === 'command' ? 'Ready (Command)' : 'Ready (Walkthrough)';
+            }, 2000);
+        } else {
+            statusText.textContent = "No items found";
+            setTimeout(() => statusText.textContent = 'Ready', 2000);
+        }
+
+    } catch (error) {
+        console.error("Upload failed:", error);
+        statusText.textContent = "Error";
+        alert("Failed to process audio. See console for details.");
+    }
 }
 
 function addQuoteItem(item) {
