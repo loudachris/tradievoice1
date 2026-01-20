@@ -4,13 +4,17 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
+from reportlab.lib.utils import ImageReader
+import base64
+import io
+
 # --- Loudachris Brand Colors ---
 COLOR_PRIMARY = colors.HexColor("#E357AB") # Brilliant Rose
 COLOR_SECONDARY = colors.HexColor("#8C87C9") # Tropical Indigo
 COLOR_TEXT = colors.HexColor("#122933") # Dark Navy
 COLOR_BG = colors.HexColor("#F5F5F5") # Platinum White
 
-def generate_invoice(filename, quote_data):
+def generate_invoice(filename, quote_data, user_profile):
     """
     Generates a PDF invoice with Loudachris Branding.
     quote_data expects dict: {
@@ -44,8 +48,39 @@ def generate_invoice(filename, quote_data):
     )
 
     # Logo / Header
-    # (Assuming text logic for now as we don't have an image asset, but would normally place logo top-left)
-    story.append(Paragraph("TradieVoice Pro", title_style))
+    if user_profile.logo_base64:
+        try:
+            # Decode base64 image
+            image_data = base64.b64decode(user_profile.logo_base64.split(',')[1])
+            image_stream = io.BytesIO(image_data)
+            img = ImageReader(image_stream)
+            
+            # Draw Image (manually drawing on canvas might be easier for positioning, 
+            # but using Flowables keeps it simple for now or we use a Table for header)
+            # Let's use a Table for the Header to align Logo Left and Text Right
+            
+            # Limited Image Flowable support in simpledoc, so let's stick to text for MVP stability
+            # or try a simple Image flowable.
+            from reportlab.platypus import Image
+            logo = Image(image_stream, width=2*inch, height=1*inch)
+            logo.hAlign = 'LEFT'
+            story.append(logo)
+            story.append(Spacer(1, 12))
+        except Exception as e:
+            print(f"Error loading logo: {e}")
+            story.append(Paragraph(user_profile.business_name, title_style))
+    else:
+        story.append(Paragraph(user_profile.business_name, title_style))
+
+    story.append(Spacer(1, 12))
+    
+    # Business Details (ABN etc)
+    if user_profile.abn:
+        story.append(Paragraph(f"ABN: {user_profile.abn}", normal_style))
+    
+    invoice_title = "TAX INVOICE" if user_profile.gst_registered else "INVOICE"
+    story.append(Paragraph(invoice_title, ParagraphStyle('InvoiceTitle', parent=styles['Heading2'], textColor=COLOR_SECONDARY)))
+    story.append(Spacer(1, 12))
     story.append(Spacer(1, 12))
     
     # Customer Details
@@ -54,16 +89,29 @@ def generate_invoice(filename, quote_data):
     
     # Table Data
     data = [['Description', 'Qty', 'Unit Price', 'Total']]
+    subtotal = 0.0
+    
     for item in quote_data.get('items', []):
+        row_total = item['total']
+        subtotal += row_total
         data.append([
             item['description'],
             str(item['quantity']),
             f"${item['unit_price']:.2f}",
-            f"${item['total']:.2f}"
+            f"${row_total:.2f}"
         ])
     
-    # Add Total Row
-    data.append(['', '', 'Grand Total:', f"${quote_data.get('total_amount', 0):.2f}"])
+    # GST Logic
+    if user_profile.gst_registered:
+        gst_amount = subtotal * 0.10
+        total_with_gst = subtotal + gst_amount
+        
+        data.append(['', '', 'Subtotal:', f"${subtotal:.2f}"])
+        data.append(['', '', 'GST (10%):', f"${gst_amount:.2f}"])
+        data.append(['', '', 'Grand Total:', f"${total_with_gst:.2f}"])
+    else:
+        # No GST
+        data.append(['', '', 'Grand Total:', f"${subtotal:.2f}"])
 
     # Table Styling (Loudachris)
     table = Table(data, colWidths=[4*inch, 1*inch, 1*inch, 1*inch])

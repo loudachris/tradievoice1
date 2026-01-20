@@ -5,10 +5,15 @@ load_dotenv() # Load environment variables from .env file
 
 from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import openai
+from backend.user_service import UserProfile, save_profile, get_profile
+from backend.invoice_generator import generate_invoice
+import os
+import uuid
 
 # --- Configuration ---
 # ideally load from env vars
@@ -123,6 +128,45 @@ async def transcribe_audio(file: UploadFile = File(...)):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/profile")
+def save_user_profile(profile: UserProfile):
+    """Saves the user business details."""
+    save_profile(profile)
+    return {"message": "Profile saved successfully"}
+
+@app.get("/api/profile", response_model=UserProfile)
+def get_user_profile():
+    """Returns the current user profile."""
+    return get_profile()
+
+class InvoiceRequest(BaseModel):
+    quote_data: QuoteData
+
+@app.post("/api/generate-invoice")
+def create_invoice(request: InvoiceRequest):
+    """Generates a PDF invoice based on quote data and stored profile."""
+    try:
+        profile = get_profile()
+        # Create a unique filename
+        filename = f"invoice_{uuid.uuid4()}.pdf"
+        filepath = os.path.join("backend", filename) # Save in backend dir temporarily
+        # For Heroku/DigitalOcean ephemeral FS, we should clean this up or stream it.
+        # But for request/response cycle, saving then sending FileResponse is okay.
+        
+        # Convert QuoteData Pydantic model to dict
+        quote_dict = request.quote_data.model_dump()
+        
+        generate_invoice(filepath, quote_dict, profile)
+        
+        # Return the file
+        return FileResponse(filepath, filename=filename, media_type='application/pdf')
+        
+    except Exception as e:
+         print(f"PDF Error: {str(e)}")
+         import traceback
+         traceback.print_exc()
+         raise HTTPException(status_code=500, detail=f"Failed to generate invoice: {str(e)}")
 
 # Serve Frontend (Place this AFTER API routes so they take precedence)
 # html=True allows serving index.html at root "/"
