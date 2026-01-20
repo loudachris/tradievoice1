@@ -30,17 +30,17 @@ app.add_middleware(
 # Note: User request placeholder "[Paste the JSON Schema from Section 5 of the Spec]"
 # I am implementing a robust default schema based on the domain.
 class LineItem(BaseModel):
-    description: str
-    quantity: float
-    unit_price: float
-    total: float
+    description: str = "Item"
+    quantity: float = 1.0
+    unit_price: float = 0.0
+    total: float = 0.0
 
 class QuoteData(BaseModel):
-    customer_name: str
-    items: List[LineItem]
-    total_amount: float
-    notes: str
-    upsell_opportunity: bool # Derived field for logic
+    customer_name: str = "Valued Customer"
+    items: List[LineItem] = []
+    total_amount: float = 0.0
+    notes: str = ""
+    upsell_opportunity: bool = False
 
 # --- Endpoints ---
 
@@ -112,11 +112,16 @@ async def transcribe_audio(file: UploadFile = File(...)):
         
         # Parse result
         import json
-        result_json = json.loads(completion.choices[0].message.content)
+        content = completion.choices[0].message.content
+        print(f"DEBUG: OpenAI Raw Response: {content}") # Log for debugging 500s
         
+        result_json = json.loads(content)
         return result_json
 
     except Exception as e:
+        print(f"ERROR: {str(e)}") # Log stack trace to stdout
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # Serve Frontend (Place this AFTER API routes so they take precedence)
