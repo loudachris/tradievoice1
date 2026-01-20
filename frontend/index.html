@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TradieVoice Pro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Logo -->
+        <header class="header">
+            <div class="logo">TradieVoice Pro</div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Command Mode Centerpiece -->
+            <div class="command-center">
+                <button id="pulse-btn" class="pulse-button">
+                    <span class="mic-icon">🎙️</span>
+                </button>
+                <div class="status-text" id="status-text">Ready</div>
+            </div>
+
+            <!-- Mode Toggle -->
+            <div class="mode-toggle-container">
+                <span class="mode-label">Command</span>
+                <label class="switch">
+                    <input type="checkbox" id="mode-toggle">
+                    <span class="slider round"></span>
+                </label>
+                <span class="mode-label">Walkthrough</span>
+            </div>
+
+            <!-- Mock Quote List -->
+            <div class="quote-list">
+                <h3>Current Quote</h3>
+                <div id="quote-items" class="quote-items">
+                    <!-- Items will be injected here -->
+                    <div class="empty-state">No items yet. Speak to add.</div>
+                </div>
+                <div class="quote-total">
+                    Total: $<span id="total-value">0.00</span>
+                </div>
+                
+                <!-- Explicit button to simulate high value for demo -->
+                <button id="sim-high-value" class="debug-btn" style="margin-top: 20px; opacity: 0.5; font-size: 0.8rem;">(Debug: Sim >$10k)</button>
+            </div>
+        </main>
+
+        <!-- Upsell Notification (Hidden by default) -->
+        <div id="upsell-notification" class="upsell-notification">
+            <div class="upsell-content">
+                <p class="upsell-text">You're quoting $10k/week? Let's fix your pipeline.</p>
+                <a href="https://tidycal.com/loudachris/strategy-call" target="_blank" class="strategy-btn">Book Strategy Call</a>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
