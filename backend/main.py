@@ -7,6 +7,7 @@ from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 import openai
 
 # --- Configuration ---
@@ -99,6 +100,6 @@ async def transcribe_audio(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/")
-def read_root():
-    return {"message": "TradieVoice Pro Backend Online"}
+# Serve Frontend (Place this AFTER API routes so they take precedence)
+# html=True allows serving index.html at root "/"
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")

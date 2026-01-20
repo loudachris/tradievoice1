@@ -6,3 +6,4 @@ reportlab
 openai
 pydantic
 python-dotenv
+aiofiles
