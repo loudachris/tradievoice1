@@ -1,4 +1,8 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv() # Load environment variables from .env file
+
 from typing import List
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
