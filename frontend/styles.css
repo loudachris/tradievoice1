@@ -1,8 +1,12 @@
 :root {
-    --primary-color: #E357AB; /* Brilliant Rose */
-    --secondary-color: #8C87C9; /* Tropical Indigo */
-    --background-color: #F5F5F5; /* Platinum White */
-    --text-color: #122933; /* Dark Navy */
+    --primary-color: #E357AB;
+    /* Brilliant Rose */
+    --secondary-color: #8C87C9;
+    /* Tropical Indigo */
+    --background-color: #F5F5F5;
+    /* Platinum White */
+    --text-color: #122933;
+    /* Dark Navy */
     --font-family: 'Nunito', sans-serif;
 }
 
@@ -24,13 +28,15 @@ body {
 
 .app-container {
     width: 100%;
-    max-width: 480px; /* Mobile constraint */
+    max-width: 480px;
+    /* Mobile constraint */
     height: 100%;
     position: relative;
-    background: #fff; /* Slight contrast for container on desktop */
+    background: #fff;
+    /* Slight contrast for container on desktop */
     display: flex;
     flex-direction: column;
-    box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
 }
 
 @media (max-width: 480px) {
@@ -48,6 +54,9 @@ body {
     left: 0;
     width: 100%;
     z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .logo {
@@ -55,6 +64,14 @@ body {
     font-size: 1.2rem;
     color: var(--text-color);
     letter-spacing: -0.5px;
+}
+
+.icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 5px;
 }
 
 /* Main Content */
@@ -114,9 +131,11 @@ body {
     0% {
         box-shadow: 0 0 0 0 rgba(227, 87, 171, 0.7);
     }
+
     70% {
         box-shadow: 0 0 0 20px rgba(227, 87, 171, 0);
     }
+
     100% {
         box-shadow: 0 0 0 0 rgba(227, 87, 171, 0);
     }
@@ -171,15 +190,15 @@ body {
     transition: .4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--secondary-color);
 }
 
-input:focus + .slider {
+input:focus+.slider {
     box-shadow: 0 0 1px var(--secondary-color);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(22px);
 }
 
@@ -197,7 +216,7 @@ input:checked + .slider:before {
     background: white;
     padding: 20px;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
 .quote-list h3 {
@@ -216,28 +235,164 @@ input:checked + .slider:before {
     font-size: 0.9rem;
 }
 
+/* Quote Footer & Export */
+.quote-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid var(--background-color);
+    padding-top: 15px;
+    margin-top: 15px;
+}
+
+.export-btn {
+    background-color: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: var(--font-family);
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 10px rgba(140, 135, 201, 0.3);
+}
+
 .quote-total {
     font-weight: 800;
     font-size: 1.2rem;
-    text-align: right;
     color: var(--text-color);
-    border-top: 2px solid var(--background-color);
-    padding-top: 10px;
+    border: none;
+    padding: 0;
 }
 
-/* Upsell Notification */
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 200;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: var(--font-family);
+}
+
+.form-group.row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group.row input {
+    width: auto;
+}
+
+.save-btn {
+    width: 100%;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.logo-preview img {
+    max-width: 100%;
+    max-height: 100px;
+    margin-top: 10px;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.debug-btn {
+    background: none;
+    border: 1px dashed #ccc;
+    padding: 5px;
+    cursor: pointer;
+}
+
 .upsell-notification {
     position: absolute;
-    top: -200px; /* Hidden initially */
+    top: -200px;
+    /* Hidden initially */
     left: 0;
     width: 100%;
-    background-color: var(--text-color); /* Dark Navy for high contrast */
+    background-color: var(--text-color);
+    /* Dark Navy for high contrast */
     color: white;
     padding: 20px;
-    padding-top: 70px; /* Clear header space */
+    padding-top: 70px;
+    /* Clear header space */
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     transition: top 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 100;
 }

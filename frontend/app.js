@@ -5,7 +5,13 @@ const state = {
     get quoteTotal() {
         return this.quoteItems.reduce((sum, item) => sum + item.total, 0);
     },
-    isRecording: false
+    isRecording: false,
+    userProfile: {
+        business_name: "",
+        abn: "",
+        gst_registered: false,
+        logo_base64: ""
+    }
 };
 
 // DOM Elements
@@ -175,5 +181,136 @@ debugBtn.addEventListener('click', () => {
     });
 });
 
+// --- Profile & Modal Logic ---
+const modal = document.getElementById("profile-modal");
+const profileBtn = document.getElementById("profile-btn");
+const closeBtn = document.getElementById("close-profile");
+const profileForm = document.getElementById("profile-form");
+const logoInput = document.getElementById("logo-upload");
+const exportBtn = document.getElementById("export-btn");
+
+profileBtn.onclick = () => {
+    modal.style.display = "flex";
+    loadProfileIntoForm();
+}
+closeBtn.onclick = () => modal.style.display = "none";
+window.onclick = (event) => {
+    if (event.target == modal) modal.style.display = "none";
+}
+
+// Convert File to Base64
+let tempLogoBase64 = "";
+
+logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            tempLogoBase64 = reader.result;
+            document.getElementById('logo-preview').innerHTML = `<img src="${tempLogoBase64}" alt="Logo Preview">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+function loadProfileIntoForm() {
+    document.getElementById("business-name").value = state.userProfile.business_name || "";
+    document.getElementById("abn").value = state.userProfile.abn || "";
+    document.getElementById("gst-reg").checked = state.userProfile.gst_registered || false;
+    if (state.userProfile.logo_base64) {
+        document.getElementById('logo-preview').innerHTML = `<img src="${state.userProfile.logo_base64}" alt="Logo Preview">`;
+        tempLogoBase64 = state.userProfile.logo_base64;
+    }
+}
+
+profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const newProfile = {
+        business_name: document.getElementById("business-name").value,
+        abn: document.getElementById("abn").value,
+        gst_registered: document.getElementById("gst-reg").checked,
+        logo_base64: tempLogoBase64 || state.userProfile.logo_base64
+    };
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/profile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newProfile)
+        });
+        if (response.ok) {
+            state.userProfile = newProfile;
+            modal.style.display = "none";
+            alert("Profile Saved!");
+        } else {
+            alert("Failed to save profile.");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error saving profile.");
+    }
+});
+
+async function fetchProfile() {
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/profile`);
+        if (response.ok) {
+            const data = await response.json();
+            state.userProfile = data;
+        }
+    } catch (e) {
+        console.error("Could not load profile", e);
+    }
+}
+
+// --- Export Logic ---
+exportBtn.addEventListener('click', async () => {
+    if (state.quoteItems.length === 0) {
+        alert("Add some items first!");
+        return;
+    }
+
+    exportBtn.textContent = "Generating...";
+    exportBtn.disabled = true;
+
+    const invoicePayload = {
+        quote_data: {
+            customer_name: "Valued Customer", // Could capture this too
+            items: state.quoteItems,
+            total_amount: state.quoteTotal,
+            notes: "Generated via TradieVoice Pro",
+            upsell_opportunity: false
+        }
+    };
+
+    try {
+        const response = await fetch(`${BACKEND_URL}/api/generate-invoice`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(invoicePayload)
+        });
+
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Invoice.pdf";
+            document.body.appendChild(a); // Req for firefox
+            a.click();
+            a.remove();
+        } else {
+            alert("Failed to generate PDF");
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Error generating PDF");
+    } finally {
+        exportBtn.textContent = "📄 Export PDF";
+        exportBtn.disabled = false;
+    }
+});
+
 // Initialize
+fetchProfile(); // Load profile on start
 updateUI();

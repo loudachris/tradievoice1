@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,11 +10,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="app-container">
-        <!-- Logo -->
+        <!-- Logo & Header -->
         <header class="header">
             <div class="logo">TradieVoice Pro</div>
+            <button id="profile-btn" class="icon-btn" aria-label="Profile Settings">👤</button>
         </header>
 
         <!-- Main Content -->
@@ -43,12 +46,16 @@
                     <!-- Items will be injected here -->
                     <div class="empty-state">No items yet. Speak to add.</div>
                 </div>
-                <div class="quote-total">
-                    Total: $<span id="total-value">0.00</span>
+                <div class="quote-footer">
+                    <div class="quote-total">
+                        Total: $<span id="total-value">0.00</span>
+                    </div>
+                    <button id="export-btn" class="export-btn">📄 Export PDF</button>
                 </div>
-                
+
                 <!-- Explicit button to simulate high value for demo -->
-                <button id="sim-high-value" class="debug-btn" style="margin-top: 20px; opacity: 0.5; font-size: 0.8rem;">(Debug: Sim >$10k)</button>
+                <button id="sim-high-value" class="debug-btn"
+                    style="margin-top: 20px; opacity: 0.5; font-size: 0.8rem;">(Debug: Sim >$10k)</button>
             </div>
         </main>
 
@@ -56,10 +63,40 @@
         <div id="upsell-notification" class="upsell-notification">
             <div class="upsell-content">
                 <p class="upsell-text">You're quoting $10k/week? Let's fix your pipeline.</p>
-                <a href="https://tidycal.com/loudachris/strategy-call" target="_blank" class="strategy-btn">Book Strategy Call</a>
+                <a href="https://tidycal.com/loudachris/strategy-call" target="_blank" class="strategy-btn">Book
+                    Strategy Call</a>
+            </div>
+        </div>
+
+        <!-- Profile Modal -->
+        <div id="profile-modal" class="modal">
+            <div class="modal-content">
+                <span id="close-profile" class="close">&times;</span>
+                <h2>Business Profile</h2>
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="business-name">Business Name</label>
+                        <input type="text" id="business-name" placeholder="My Electrical" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="abn">ABN</label>
+                        <input type="text" id="abn" placeholder="12 345 678 901">
+                    </div>
+                    <div class="form-group row">
+                        <label for="gst-reg">Registered for GST?</label>
+                        <input type="checkbox" id="gst-reg">
+                    </div>
+                    <div class="form-group">
+                        <label for="logo-upload">Logo</label>
+                        <input type="file" id="logo-upload" accept="image/*">
+                        <div id="logo-preview" class="logo-preview"></div>
+                    </div>
+                    <button type="submit" class="save-btn">Save Profile</button>
+                </form>
             </div>
         </div>
     </div>
     <script src="app.js"></script>
 </body>
+
 </html>
